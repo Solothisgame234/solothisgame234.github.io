@@ -1,0 +1,62 @@
+/* Shared styles for solothisgame234.github.io */
+:root{--bg:#05010f;--panel:rgba(255,255,255,.04);--line:rgba(120,220,255,.22);--ink:#eaf6ff;--dim:rgba(234,246,255,.7);--c1:#29e6ff;--c2:#c06bff;--hot:#ff2f6e;--amb:#ffb020}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(ellipse at top,#1a0838 0,var(--bg) 640px) no-repeat,var(--bg);color:var(--ink);font:17px/1.7 ui-rounded,"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+a{color:var(--c1)}
+a:hover{color:#8ff3ff}
+img{max-width:100%;height:auto;display:block}
+
+/* Header and navigation */
+.top{position:sticky;top:0;z-index:10;background:rgba(5,1,15,.88);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .in{max-width:980px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap}
+.brand{font-weight:900;letter-spacing:.14em;text-decoration:none;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav{display:flex;gap:4px 16px;flex-wrap:wrap;margin-left:auto}
+nav a{color:var(--dim);text-decoration:none;font-weight:700;font-size:15px}
+nav a:hover,nav a[aria-current]{color:var(--c1)}
+
+/* Layout */
+main{max-width:980px;margin:0 auto;padding:36px 16px 56px}
+main.read{max-width:760px}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.15;letter-spacing:.02em;margin-bottom:10px}
+h2{font-size:24px;margin:36px 0 10px;color:var(--c1)}
+h3{font-size:19px;margin:24px 0 6px}
+p,ul,ol,table,pre,.box{margin:0 0 16px}
+ul,ol{padding-left:22px}
+li{margin:4px 0}
+.lead{font-size:19px;color:var(--dim)}
+.meta{font-size:14px;color:var(--dim);margin-bottom:22px}
+.crumb{font-size:14px;margin-bottom:12px;color:var(--dim)}
+.crumb a{color:var(--dim)}
+code{font:15px ui-monospace,Consolas,monospace;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px}
+pre{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.09);vertical-align:top}
+th{color:var(--dim);font-weight:700}
+.scroll{overflow-x:auto}
+.red{color:var(--hot);font-weight:700}.amber{color:var(--amb);font-weight:700}
+.box{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px 18px}
+.box p:last-child{margin-bottom:0}
+
+/* Buttons and cards */
+.btn{display:inline-block;padding:12px 30px;border-radius:999px;background:linear-gradient(90deg,var(--c1),var(--c2));color:#05010f;font-weight:900;letter-spacing:.1em;text-decoration:none;box-shadow:0 0 22px rgba(41,230,255,.4)}
+.btn:hover{color:#05010f;filter:brightness(1.1)}
+.btn.ghost{background:none;color:var(--c1);border:1px solid var(--c1);box-shadow:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:0 0 16px}
+.card{display:block;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:16px 18px;text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--c1);color:var(--ink)}
+.card b{display:block;color:var(--c1);margin-bottom:4px}
+.card span{font-size:15px;color:var(--dim)}
+
+/* Hero and game frame */
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;align-items:center;margin-bottom:12px}
+.hero img{border-radius:14px;border:1px solid var(--line)}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+.frame{position:relative;width:100%;aspect-ratio:3/2;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;margin:0 0 10px}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+figure{margin:0 0 18px}
+figcaption{font-size:14px;color:var(--dim);margin-top:6px}
+
+footer{border-top:1px solid var(--line);text-align:center;font-size:14px;color:var(--dim);padding:22px 16px 30px}
+footer a{color:var(--dim)}
