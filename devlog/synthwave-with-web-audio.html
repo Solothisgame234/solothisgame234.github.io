@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Synthwave from code: Neon Drift's music and sound with the Web Audio API</title>
+<meta name="description" content="How Neon Drift makes its soundtrack and sound effects with no audio files: oscillators, filtered noise, a look-ahead scheduler and music that reacts to speed.">
+<meta name="google-adsense-account" content="ca-pub-7962215647782479">
+<link rel="canonical" href="https://solothisgame234.github.io/devlog/synthwave-with-web-audio.html">
+<link rel="stylesheet" href="/style.css">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7962215647782479" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/neon-drift.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
+<main class="read">
+  <p class="crumb"><a href="/">Home</a> › <a href="/devlog/">Devlog</a> › Synthwave from code</p>
+  <h1>Synthwave from code</h1>
+  <p class="meta">28 October 2026 · Solothisgame234</p>
+  <p class="lead">Neon Drift has no sound files. The music and every effect are made live in the browser with the Web Audio API. That keeps the whole game at about 120 KB and lets the music react to how fast you're going.</p>
+
+  <h2>The signal chain</h2>
+  <p>Every sound goes through the same small mixer:</p>
+  <ul>
+    <li><b>Music</b> and <b>effects</b> each have their own volume (gain) node. Those are the two sliders in the pause menu.</li>
+    <li>Both feed a <b>master</b> gain used for mute.</li>
+    <li>The master goes through a <b>compressor</b> before the speakers, so a burst of effects (a smash, a combo, a new best) never clips or gets painfully loud.</li>
+  </ul>
+  <p>Browsers only allow audio after the player interacts with the page, so the audio system starts on the first tap or key press.</p>
+
+  <h2>Sound effects are tiny recipes</h2>
+  <p>Each effect is one or two short notes with a pitch sweep, or a burst of filtered noise. A jump is a square wave sweeping from 300 Hz up to 640 Hz in about a tenth of a second. A dash adds a hiss of band-passed noise to a falling sawtooth. A crash combines low-passed noise with two falling tones. Orb pickups climb a pentatonic scale as your combo grows, so a long chain sounds like a melody and never hits a wrong note. A new best plays a quick rising arpeggio.</p>
+  <p>Every note has a short volume envelope: a fast rise and an exponential fall. That's the difference between a click and something that sounds like an instrument.</p>
+
+  <h2>The soundtrack: four chords at 116 BPM</h2>
+  <p>The music is a loop in A minor: A minor, F, C, G, one bar each, at 116 beats per minute in sixteenth notes. It has four instruments, all built from the same parts:</p>
+  <ul>
+    <li><b>Kick:</b> a sine wave dropping from 150 Hz to 42 Hz on every beat.</li>
+    <li><b>Hi-hat:</b> a very short burst of high-passed noise on the off-beats.</li>
+    <li><b>Bass:</b> a sawtooth jumping between two octaves of the chord's root, through a resonant low-pass filter that snaps shut after each note. That filter sweep is the classic synthwave "pluck".</li>
+    <li><b>Arpeggio:</b> square-wave notes running through the chord.</li>
+  </ul>
+
+  <h2>Timing: the look-ahead scheduler</h2>
+  <p>JavaScript timers are not precise enough for music. A <code>setTimeout</code> can fire tens of milliseconds late, and a busy frame makes it worse. Web Audio, on the other hand, can start a note at an exact time on its own clock. So the game uses the well-known look-ahead pattern: a timer wakes up every 25 ms and schedules every note due in the next 120 ms at its exact time.</p>
+  <pre><code>function schedule() {
+  if (nextT &lt; ctx.currentTime - 0.2) nextT = ctx.currentTime + 0.05;  // tab slept: resync
+  while (nextT &lt; ctx.currentTime + 0.12) {
+    playStep(step, nextT);          // kick, hat, bass, arp for this sixteenth
+    nextT += SIXTEENTH; step++;
+  }
+}
+setInterval(schedule, 25);</code></pre>
+  <p>The first line handles a real problem. When a tab sits in the background, browsers slow its timers down. When the player comes back, a naive scheduler would try to "catch up" and fire seconds of notes at once. Instead, it notices it fell behind and starts fresh.</p>
+
+  <h2>Music that follows the game</h2>
+  <p>The game passes an intensity value from 0 to 1 to the audio system, based on how close you are to top speed. Two things change with it:</p>
+  <ul>
+    <li>The bass filter opens wider (its cutoff goes from 320 Hz up to about 1,900 Hz), so the bass gets brighter and more aggressive as you speed up.</li>
+    <li>Above 30% intensity, the arpeggio joins in.</li>
+  </ul>
+  <p>The music also gets quieter on the pause and game-over screens and comes back up when a run starts. The track never changes, but it feels like it builds with your run.</p>
+
+  <h2>Why bother?</h2>
+  <p>Audio files would have made the game several times bigger and slower to load on mobile data, and they couldn't react to gameplay. A hundred lines of synthesis code gives a soundtrack that loads instantly and follows the player.</p>
+  <p><a href="/games/neon-drift.html">Play Neon Drift</a> with sound on to hear it.</p>
+</main>
+<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/neon-drift">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
+</body>
+</html>

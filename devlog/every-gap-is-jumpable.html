@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Making every gap jumpable: physics-aware level generation in Neon Drift</title>
+<meta name="description" content="How Neon Drift generates endless levels that are always beatable: jump equations, air time, speed ramps, and placing orbs along the ideal jump arc.">
+<meta name="google-adsense-account" content="ca-pub-7962215647782479">
+<link rel="canonical" href="https://solothisgame234.github.io/devlog/every-gap-is-jumpable.html">
+<link rel="stylesheet" href="/style.css">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7962215647782479" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/neon-drift.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
+<main class="read">
+  <p class="crumb"><a href="/">Home</a> › <a href="/devlog/">Devlog</a> › Making every gap jumpable</p>
+  <h1>Making every gap jumpable</h1>
+  <p class="meta">28 October 2026 · Solothisgame234</p>
+  <p class="lead">The worst feeling in an endless runner is dying to a gap that was never possible. Neon Drift avoids that by building each gap from the same equations that move the ship.</p>
+
+  <h2>The problem with random gaps</h2>
+  <p>A simple endless runner picks a random gap width, say between 100 and 400 pixels, and hopes for the best. That breaks in two ways. Early on, when the ship is slow, a 400-pixel gap may be impossible. Later, when the ship is fast, a 100-pixel gap is boring. The fix is to stop thinking in pixels and think in time: how long can the ship stay in the air, and how far does it travel in that time at the speed it will have when it gets there?</p>
+
+  <h2>The jump in numbers</h2>
+  <p>Neon Drift uses simple, constant gravity. The world is 720 units tall, and these are the actual values in the game:</p>
+  <div class="scroll"><table>
+    <tr><th>Setting</th><th>Value</th></tr>
+    <tr><td>Gravity</td><td>2,900 units/s²</td></tr>
+    <tr><td>Jump speed (from the ground)</td><td>980 units/s upward</td></tr>
+    <tr><td>Double jump speed</td><td>860 units/s upward</td></tr>
+    <tr><td>Forward speed</td><td>430 units/s, rising 0.004 units/s for every unit flown, up to 880</td></tr>
+  </table></div>
+  <p>From those, everything else follows. Time to the top of a jump is <code>v / g</code> = 980 / 2900 ≈ 0.34 s. Jump height is <code>v² / 2g</code> ≈ 166 units. A full jump that lands at the same height is in the air for twice the rise time, about 0.68 s. At the starting speed of 430 units/s that covers about 291 units. At the top speed of 880 it covers about 595.</p>
+  <p>A double jump fired at the top of the first adds another 128 units of height. The ship peaks around 293 units up and stays in the air about 1.08 s, which covers 466 units at the start and over 950 at full speed.</p>
+
+  <h2>Air time for any landing height</h2>
+  <p>Platforms aren't all at the same height, so the generator needs air time for a landing that is <code>dy</code> units lower (positive) or higher (negative). Solving the motion equation for when the ship comes back down to that height gives:</p>
+  <pre><code>function airTime(dy, dbl) {
+  const g = GRAVITY;
+  if (!dbl) return (JUMP_V + Math.sqrt(Math.max(0, JUMP_V * JUMP_V + 2 * g * dy))) / g;
+  // double jump: rise to the first apex, then a second jump from there
+  return T_APEX + (DJUMP_V + Math.sqrt(Math.max(0, DJUMP_V * DJUMP_V + 2 * g * (dy + H1)))) / g;
+}</code></pre>
+  <p>The <code>Math.max(0, …)</code> matters. If a platform is higher than the jump can reach, the square root would be of a negative number. Clamping it means the generator gets back the "reach the peak and stop" time instead of <code>NaN</code>, and is never told it can place an impossible ledge.</p>
+
+  <h2>Speed is a function of distance</h2>
+  <p>Because the ship speeds up with distance flown, not with time, the generator can work out exactly how fast the ship will be going at any point ahead:</p>
+  <pre><code>const speedAt = x =&gt; Math.min(MAX_SPEED, BASE_SPEED + Math.max(0, x) * SPEED_RAMP);</code></pre>
+  <p>So when it builds a gap starting at <code>x</code>, the maximum reach is <code>speedAt(x) * airTime(dy, dbl)</code>. Real gaps are then picked as a fraction of that, usually 40% to 58% of the full reach. That leaves room for a jump that's a little early or late, and the gaps grow as the game speeds up, so it gets harder in a way that stays fair. Dashing is never needed to clear a gap. It's a bonus that gives you more room.</p>
+
+  <h2>Orbs that teach the jump</h2>
+  <p>The same equations place the orbs. For a gap, the generator samples the path of the ideal jump and drops an orb at evenly spaced moments along it:</p>
+  <pre><code>function arcOrbs(x0, top, s, dbl, n, dy = 0) {
+  const T = airTime(dy, dbl);
+  for (let i = 1; i &lt;= n; i++) {
+    const t = T * i / (n + 1);
+    addOrb(x0 + s * t, top - PLAYER_RADIUS + arcY(t, dbl));
+  }
+}</code></pre>
+  <p><code>arcY(t)</code> is the height of the ship <code>t</code> seconds into the jump. Players quickly learn that following an orb line is the right jump, and the game never has to explain it in words. You can see it in the screenshot on the <a href="/">home page</a>: the orbs sit right where the ship will pass.</p>
+
+  <h2>Short hops</h2>
+  <p>Holding the jump button gives the full arc above. Letting go early makes gravity 2.4 times stronger while the ship is still rising, so it turns around sooner. The generator always assumes the full jump, so short hops are only ever an extra choice for the player, never a requirement.</p>
+
+  <h2>What this buys</h2>
+  <ul>
+    <li>Levels stay fair at every speed, from the first meter to the top speed reached after about 2,800 m.</li>
+    <li>Difficulty comes from speed and timing, not luck.</li>
+    <li>Tuning stays in one place. Changing gravity or jump speed automatically changes how levels are built, so they can never fall out of sync.</li>
+  </ul>
+  <p>Want to feel it? <a href="/games/neon-drift.html">Play Neon Drift</a>, or read the <a href="/guides/beginners-guide.html">beginner's guide</a>.</p>
+</main>
+<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/neon-drift">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The orb that chased the ship: fixing a magnet bug and a frame cap in Neon Drift</title>
+<meta name="description" content="Two bugs from Neon Drift: a magnet that let orbs trail the ship forever, and a 60 FPS cap that gave 36 FPS on 72 Hz screens. The math behind both, and the fixes.">
+<meta name="google-adsense-account" content="ca-pub-7962215647782479">
+<link rel="canonical" href="https://solothisgame234.github.io/devlog/frame-rate-and-the-chasing-orb.html">
+<link rel="stylesheet" href="/style.css">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7962215647782479" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/neon-drift.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
+<main class="read">
+  <p class="crumb"><a href="/">Home</a> › <a href="/devlog/">Devlog</a> › The orb that chased the ship</p>
+  <h1>The orb that chased the ship</h1>
+  <p class="meta">28 October 2026 · Solothisgame234</p>
+  <p class="lead">Players noticed a glowing dot that sometimes followed the ship around instead of being collected. It turned out to be simple math, and fixing it led to a second bug in how the game limits its frame rate.</p>
+
+  <h2>Bug 1: an orb that never arrives</h2>
+  <p>Every ship has a magnet: orbs within 130 units drift toward it. The original code moved each nearby orb a fraction of the remaining distance every frame, which is the standard "smooth follow" trick:</p>
+  <pre><code>// old: close a fraction of the gap each frame
+o.x += (ship.x - o.x) * k;
+o.y += (ship.y - o.y) * k;</code></pre>
+  <p>Here <code>k</code> grows with frame time, at a rate of about 9 per second. The trouble is that the target is moving. The ship flies forward at 430 units/s or more, so each frame the gap grows by the ship's movement and then shrinks by a fraction. Those two balance out when</p>
+  <pre><code>gap ≈ ship speed / 9 ≈ 430 / 9 ≈ 48 units</code></pre>
+  <p>An orb picks up when it's within 34 units of the ship's center. So an orb caught from behind settled 48 units back and stayed there, chasing the ship forever. At top speed (880 units/s) the gap was nearly 100 units, still inside the 130-unit magnet range, so it never let go either.</p>
+
+  <h3>The fix: move with the ship, then close in</h3>
+  <p>A caught orb now first moves by the same amount the ship moved this frame, and only then closes part of the remaining gap. Seen from the ship, the orb is no longer chasing a moving target. The gap only shrinks, and it shrinks quickly:</p>
+  <pre><code>if (o.mag) {
+  o.x += shipDx; o.y += shipDy;               // ride along with the ship
+  o.x += (ship.x - o.x) * k;                  // then close part of the gap
+  o.y += (ship.y - o.y) * k;
+}
+// collected when close enough, or 0.35 s after being caught at the latest</code></pre>
+  <p>Two smaller changes came with it. Once an orb is caught it stays caught, so it can't drift out of range halfway in. And it's collected after 0.35 seconds at the latest, just in case. In testing, orbs caught behind, beside and above the ship were all collected in 0.07 to 0.10 seconds.</p>
+
+  <h2>Bug 2: "60 FPS" that ran at 36</h2>
+  <p>The same update added a frame rate setting: 30 FPS, 60 FPS or Unlimited. Lower and steadier often feels smoother than higher and uneven on weak phones. The browser calls the game once per screen refresh through <code>requestAnimationFrame</code>, so a cap has to skip some of those calls. The first version did the obvious thing:</p>
+  <pre><code>// first try: skip the frame if less than 1/60 s has passed
+if (now - last &lt; 1000 / cap * 0.85) return;</code></pre>
+  <p>On a 60 Hz screen that works. The test machine's screen was 72 Hz, though, and refreshes arrive every 13.9 ms. With a 60 FPS cap the threshold was 14.2 ms, so every second refresh was skipped and the game ran at 36 FPS. That's slower than asked for, and noticeably choppy. Screens at 75, 90 and 144 Hz each fail in their own way with this approach.</p>
+
+  <h3>The fix: a schedule instead of a minimum gap</h3>
+  <p>The cap now keeps a "next frame due" time that moves forward by exactly 1/60 s (or 1/30 s) each time it renders, and renders on whichever refresh lands closest to that time. To know what "closest" means, it keeps a running average of the screen's refresh interval:</p>
+  <pre><code>vsync = vsync * 0.9 + (now - prevNow) * 0.1;      // measured refresh interval
+if (now &lt; due - vsync / 2) return;                 // not this refresh
+due = now - due &gt; interval ? now + interval        // after a stall, start over
+                           : due + interval;       // otherwise keep the rhythm</code></pre>
+  <p>Measured on a 144 Hz screen afterward: 30 FPS gave 30, 60 FPS gave 60.5, and Unlimited gave 144. The "start over" line stops the game from rendering a burst of frames to catch up after a pause.</p>
+
+  <h3>Making the rest frame-rate proof</h3>
+  <p>With the frame rate now up to the player, anything that happened "once per frame" became a bug. The light trail behind the ship stored one point per frame, so at 30 FPS it was twice as long and jagged, and at 144 FPS it was short. Thruster sparks were the same. Both now run on time instead: the trail records a point every 1/60 s during the physics steps, and sparks are emitted at 60 per second. The physics already ran in fixed 1/120 s steps, so movement and collisions were never affected.</p>
+
+  <h2>Automatic 30 FPS for slow devices</h2>
+  <p>Most players never open a settings menu. So during the first four seconds of real play on a new device, the game measures its frame rate. If it can't hold about 50 FPS, it switches to the steadier 30 FPS cap and shows a short note saying so. You can change it any time on the start screen or in the pause menu.</p>
+
+  <h2>Takeaways</h2>
+  <ul>
+    <li>"Move a fraction of the way toward the target" only arrives if the target is still. For a moving target, work in the target's frame of reference.</li>
+    <li>A frame cap should be a schedule, not a minimum gap between frames.</li>
+    <li>If players can change the frame rate, anything counted "per frame" needs to become "per second".</li>
+  </ul>
+  <p><a href="/games/neon-drift.html">Play Neon Drift</a> and watch the orbs snap in.</p>
+</main>
+<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/neon-drift">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
+</body>
+</html>
