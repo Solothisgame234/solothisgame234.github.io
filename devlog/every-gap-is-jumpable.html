@@ -3,26 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Making every gap jumpable: physics-aware level generation in Neon Drift</title>
-<meta name="description" content="How Neon Drift generates endless levels that are always beatable: jump equations, air time, speed ramps, and placing orbs along the ideal jump arc.">
+<title>Making every gap jumpable: physics-aware level generation in Voltdart</title>
+<meta name="description" content="How Voltdart generates endless levels that are always beatable: jump equations, air time, speed ramps, and placing orbs along the ideal jump arc.">
 <meta name="google-adsense-account" content="ca-pub-7962215647782479">
 <link rel="canonical" href="https://solothisgame234.github.io/devlog/every-gap-is-jumpable.html">
 <link rel="stylesheet" href="/style.css">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7962215647782479" crossorigin="anonymous"></script>
 </head>
 <body>
-<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/neon-drift.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
+<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/voltdart.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
 <main class="read">
   <p class="crumb"><a href="/">Home</a> › <a href="/devlog/">Devlog</a> › Making every gap jumpable</p>
   <h1>Making every gap jumpable</h1>
   <p class="meta">28 October 2026 · Solothisgame234</p>
-  <p class="lead">The worst feeling in an endless runner is dying to a gap that was never possible. Neon Drift avoids that by building each gap from the same equations that move the ship.</p>
+  <p class="lead">The worst feeling in an endless runner is dying to a gap that was never possible. Voltdart avoids that by building each gap from the same equations that move the ship.</p>
 
   <h2>The problem with random gaps</h2>
   <p>A simple endless runner picks a random gap width, say between 100 and 400 pixels, and hopes for the best. That breaks in two ways. Early on, when the ship is slow, a 400-pixel gap may be impossible. Later, when the ship is fast, a 100-pixel gap is boring. The fix is to stop thinking in pixels and think in time: how long can the ship stay in the air, and how far does it travel in that time at the speed it will have when it gets there?</p>
 
   <h2>The jump in numbers</h2>
-  <p>Neon Drift uses simple, constant gravity. The world is 720 units tall, and these are the actual values in the game:</p>
+  <p>Voltdart uses simple, constant gravity. The world is 720 units tall, and these are the actual values in the game:</p>
   <div class="scroll"><table>
     <tr><th>Setting</th><th>Value</th></tr>
     <tr><td>Gravity</td><td>2,900 units/s²</td></tr>
@@ -68,8 +68,8 @@
     <li>Difficulty comes from speed and timing, not luck.</li>
     <li>Tuning stays in one place. Changing gravity or jump speed automatically changes how levels are built, so they can never fall out of sync.</li>
   </ul>
-  <p>Want to feel it? <a href="/games/neon-drift.html">Play Neon Drift</a>, or read the <a href="/guides/beginners-guide.html">beginner's guide</a>.</p>
+  <p>Want to feel it? <a href="/games/voltdart.html">Play Voltdart</a>, or read the <a href="/guides/beginners-guide.html">beginner's guide</a>.</p>
 </main>
-<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/neon-drift">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
+<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/voltdart">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
 </body>
 </html>

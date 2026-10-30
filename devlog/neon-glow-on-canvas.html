@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Neon glow on a 2D canvas without shadowBlur</title>
-<meta name="description" content="How Neon Drift draws its neon look fast: layered strokes, additive 'lighter' blending, a pixel budget for high-DPI screens and object pools for particles.">
+<meta name="description" content="How Voltdart draws its neon look fast: layered strokes, additive 'lighter' blending, a pixel budget for high-DPI screens and object pools for particles.">
 <meta name="google-adsense-account" content="ca-pub-7962215647782479">
 <link rel="canonical" href="https://solothisgame234.github.io/devlog/neon-glow-on-canvas.html">
 <link rel="stylesheet" href="/style.css">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7962215647782479" crossorigin="anonymous"></script>
 </head>
 <body>
-<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/neon-drift.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
+<header class="top"><div class="in"><a class="brand" href="/">SOLOTHISGAME234</a><nav><a href="/games/voltdart.html">Play</a><a href="/guides.html">Guides</a><a href="/devlog/" aria-current="page">Devlog</a><a href="/about.html">About</a></nav></div></header>
 <main class="read">
   <p class="crumb"><a href="/">Home</a> › <a href="/devlog/">Devlog</a> › Neon glow on a 2D canvas</p>
   <h1>Neon glow on a 2D canvas</h1>
   <p class="meta">28 October 2026 · Solothisgame234</p>
-  <p class="lead">The obvious way to make something glow on an HTML canvas is <code>shadowBlur</code>. It looks great and it's slow. Neon Drift draws hundreds of glowing shapes every frame on phones, so it fakes the glow instead.</p>
+  <p class="lead">The obvious way to make something glow on an HTML canvas is <code>shadowBlur</code>. It looks great and it's slow. Voltdart draws hundreds of glowing shapes every frame on phones, so it fakes the glow instead.</p>
 
   <h2>Why not shadowBlur?</h2>
   <p><code>shadowBlur</code> runs a blur for every shape you draw. One glowing logo is fine. A level full of neon platforms, a ship, a trail, dozens of orbs and up to 900 particles is not, especially on mobile, where it can cut the frame rate in half. The blur also depends on screen resolution, so it gets slower the sharper the display.</p>
@@ -33,7 +33,7 @@
   <p>Every platform edge, hazard outline and the ship itself is drawn with this function. The optional white core is what makes it read as a neon tube rather than a colored line. Three or four strokes cost a tiny fraction of one blur.</p>
 
   <h2>Additive blending</h2>
-  <p>Real light adds up: two overlapping glows are brighter than either one. Canvas can do that with <code>ctx.globalCompositeOperation = 'lighter'</code>, which adds colors together instead of painting over them. Neon Drift switches it on for orbs, particles, the ship's light trail and the dash afterimages. Orbs are drawn as three circles with this mode on:</p>
+  <p>Real light adds up: two overlapping glows are brighter than either one. Canvas can do that with <code>ctx.globalCompositeOperation = 'lighter'</code>, which adds colors together instead of painting over them. Voltdart switches it on for orbs, particles, the ship's light trail and the dash afterimages. Orbs are drawn as three circles with this mode on:</p>
   <ul>
     <li>a large, faint circle at 16% opacity for the halo,</li>
     <li>a medium circle at 60% for the body,</li>
@@ -45,13 +45,13 @@
   <p>The world's color shifts as the score rises: <code>hue = 220 − 70 × cos(score / 800 + 1.13)</code>. That sweeps between cyan (150) and violet (290) and never reaches red or amber. Those two colors are reserved for hazards and never change, so at full speed your eyes can rely on them. Pretty color cycling is fine, as long as it never makes danger harder to spot.</p>
 
   <h2>A pixel budget for sharp screens</h2>
-  <p>On a high-DPI display, a full-screen canvas can be enormous. A 2560×1440 monitor is 3.7 million pixels, and a phone at 3× density is similar. Neon Drift caps the canvas at 2.4 million pixels and lowers the drawing resolution just enough to fit:</p>
+  <p>On a high-DPI display, a full-screen canvas can be enormous. A 2560×1440 monitor is 3.7 million pixels, and a phone at 3× density is similar. Voltdart caps the canvas at 2.4 million pixels and lowers the drawing resolution just enough to fit:</p>
   <pre><code>const maxPx = 2.4e6;
 if (W * H * DPR * DPR &gt; maxPx) DPR = Math.sqrt(maxPx / (W * H));</code></pre>
   <p>Because everything glows anyway, the slight softness at very high resolutions is invisible, and the frame rate stays steady.</p>
 
   <h2>Object pools: no garbage, no stutter</h2>
-  <p>Creating hundreds of small objects every second (particles, orbs, floating "+80" text) makes the JavaScript garbage collector run, and a collection in the middle of a jump shows up as a stutter. Neon Drift creates everything up front and reuses it:</p>
+  <p>Creating hundreds of small objects every second (particles, orbs, floating "+80" text) makes the JavaScript garbage collector run, and a collection in the middle of a jump shows up as a stutter. Voltdart creates everything up front and reuses it:</p>
   <pre><code>class Pool {
   constructor(factory, size) { this.free = []; this.active = [];
     for (let i = 0; i &lt; size; i++) this.free.push(factory()); }
@@ -65,8 +65,8 @@ if (W * H * DPR * DPR &gt; maxPx) DPR = Math.sqrt(maxPx / (W * H));</code></pre>
   <h2>A city in two layers</h2>
   <p>The skyline behind the track is two layers of buildings generated once from a seeded random number generator, so they look the same every time. They scroll slower than the track (parallax), which gives depth for almost no cost. Lit windows, stars and the big synthwave sun are drawn with it. The optional CRT filter is plain CSS (scanlines and a vignette laid over the canvas), so it costs the game nothing.</p>
 
-  <p>See it running: <a href="/games/neon-drift.html">play Neon Drift</a>. If it stutters on your device, the <a href="/devlog/frame-rate-and-the-chasing-orb.html">frame-rate post</a> explains the 30 FPS option.</p>
+  <p>See it running: <a href="/games/voltdart.html">play Voltdart</a>. If it stutters on your device, the <a href="/devlog/frame-rate-and-the-chasing-orb.html">frame-rate post</a> explains the 30 FPS option.</p>
 </main>
-<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/neon-drift">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
+<footer><p><a href="/privacy.html">Privacy</a> · <a href="/about.html#contact">Contact</a> · <a href="https://stgojo123.itch.io/voltdart">itch.io</a> · <a href="https://github.com/Solothisgame234">GitHub</a></p><p>© 2026 Solothisgame234</p></footer>
 </body>
 </html>
